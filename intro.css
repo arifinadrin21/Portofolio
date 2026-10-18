@@ -1,0 +1,314 @@
+/* ============================================================
+   INTRO: Kartu nama gantung + fisika Verlet
+   ============================================================ */
+html.intro-lock,
+html.intro-lock body{
+  overflow:hidden;
+}
+
+.intro{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  background:#0B1220;
+  color:#F1F5F9;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:2rem;
+  padding:0 8%;
+  overflow:hidden;
+  transition:transform .9s cubic-bezier(.76,0,.24,1), opacity .35s ease;
+}
+
+.intro.leave{
+  transform:translateY(-100%);
+}
+
+/* Grid dekorasi */
+.intro::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  opacity:.4;
+  pointer-events:none;
+  background-image:
+    linear-gradient(#243349 1px, transparent 1px),
+    linear-gradient(90deg, #243349 1px, transparent 1px);
+  background-size:44px 44px;
+  mask-image:radial-gradient(ellipse at 70% 40%, black, transparent 70%);
+}
+
+/* --- Teks kiri --- */
+.intro-text{
+  position:relative;
+  z-index:2;
+  flex:1 1 420px;
+  max-width:560px;
+}
+
+.intro-title{
+  font-family:var(--font-mono);
+  font-size:.75rem;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:#64748B;
+  margin-bottom:1.5rem;
+}
+
+.intro-name{
+  font-family:var(--font-body);
+  font-size:clamp(2.2rem, 5vw, 3.4rem);
+  font-weight:700;
+  line-height:1.1;
+  color:#ffffff;
+  margin-bottom:1.5rem;
+}
+.intro-name span{color:#60A5FA;}
+
+.intro-sub{
+  font-family:var(--font-body);
+  font-size:1rem;
+  color:#94A3B8;
+  line-height:1.65;
+  margin-bottom:2rem;
+  max-width:52ch;
+}
+
+.intro-hint{
+  margin-top:1.25rem;
+  font-size:.8rem;
+  color:#64748B;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.intro-hint::before{
+  content:"";
+  width:20px;
+  height:1px;
+  background:#475569;
+}
+
+.intro-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#3B82F6;
+  color:#ffffff;
+  border:none;
+  border-radius:8px;
+  padding:.8rem 1.8rem;
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:.9rem;
+  cursor:pointer;
+  transition:background .2s, transform .2s;
+  box-shadow:0 4px 14px rgba(59,130,246,.4);
+}
+.intro-btn:hover{
+  background:#2563EB;
+  transform:translateY(-2px);
+}
+
+/* --- Stage / panggung lanyard --- */
+.intro-stage{
+  position:relative;
+  z-index:1;
+  flex:0 0 380px;
+  width:380px;
+  height:100vh;
+  overflow:visible;
+}
+
+/* SVG tali */
+.intro-rope{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  overflow:visible;
+  pointer-events:none;
+  z-index:1;
+}
+.intro-rope path{
+  fill:none;
+  stroke-linecap:round;
+}
+.strap-text{
+  fill:#94A3B8;
+  font-family:var(--font-mono);
+  font-size:10px;
+  letter-spacing:2px;
+}
+
+/* Kartu nama */
+.id-card{
+  position:absolute;
+  left:0;
+  top:0;
+  z-index:3;
+  width:280px;
+  margin:0;
+  padding:36px 16px 16px;
+  border-radius:16px;
+  background:#ffffff;
+  color:#0F172A;
+  box-shadow:0 25px 50px -12px rgba(0,0,0,.5);
+  transform-origin:50% 0;
+  will-change:transform;
+  touch-action:none;
+  user-select:none;
+  cursor:grab;
+  opacity:0;
+  transition:opacity .35s ease, box-shadow .2s ease;
+}
+.id-card.grab{cursor:grabbing;}
+.id-card:active{box-shadow:0 30px 60px -10px rgba(0,0,0,.6);}
+
+/* Hook, crimp, clip, slot */
+.id-hook{
+  position:absolute;
+  left:50%;
+  top:-30px;
+  width:14px;
+  height:30px;
+  margin-left:-7px;
+  border:3px solid #CBD5E1;
+  border-radius:8px;
+  box-shadow:0 1px 3px rgba(0,0,0,.5);
+}
+.id-crimp{
+  position:absolute;
+  left:50%;
+  top:-45px;
+  width:34px;
+  height:20px;
+  margin-left:-17px;
+  border-radius:4px;
+  background:linear-gradient(180deg,#334155,#0F172A);
+  box-shadow:0 2px 5px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.15);
+}
+.id-clip{
+  position:absolute;
+  left:50%;
+  top:-12px;
+  width:24px;
+  height:36px;
+  margin-left:-12px;
+  border-radius:6px;
+  background:linear-gradient(90deg,#94A3B8,#F1F5F9 45%,#94A3B8);
+  box-shadow:0 2px 6px rgba(0,0,0,.4);
+}
+.id-slot{
+  position:absolute;
+  left:50%;
+  top:16px;
+  width:50px;
+  height:6px;
+  margin-left:-25px;
+  border-radius:4px;
+  background:#E2E8F0;
+  box-shadow:inset 0 1px 2px rgba(15,23,42,.35);
+}
+
+/* Isi kartu */
+.id-photo{
+  width:100%;
+  aspect-ratio:4/5;
+  object-fit:cover;
+  border-radius:10px;
+  background:#F1F5F9;
+  pointer-events:none;
+  -webkit-user-drag:none;
+}
+.id-name{
+  font-family:var(--font-display);
+  font-style:italic;
+  font-size:1.35rem;
+  line-height:1.15;
+  margin-top:.9rem;
+  letter-spacing:-.01em;
+}
+.id-role{
+  font-size:.8rem;
+  color:#475569;
+  margin-top:.2rem;
+  font-weight:600;
+}
+.id-school{
+  font-size:.72rem;
+  color:#64748B;
+  margin-top:2px;
+}
+.id-foot{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-top:.9rem;
+  padding-top:.8rem;
+  border-top:1px dashed #CBD5E1;
+}
+.id-bars{
+  flex:1;
+  height:20px;
+  background:repeating-linear-gradient(
+    90deg,
+    #0F172A 0 2px,
+    transparent 2px 4px,
+    #0F172A 4px 5px,
+    transparent 5px 8px,
+    #0F172A 8px 11px,
+    transparent 11px 13px
+  );
+}
+.id-year{
+  font-family:var(--font-mono);
+  font-size:.7rem;
+  color:#475569;
+}
+
+/* --- Responsive intro --- */
+@media (max-width:900px){
+  .intro{
+    flex-direction:column;
+    justify-content:flex-start;
+    align-items:center;
+    padding:2rem 1.25rem;
+    gap:1rem;
+    overflow-y:auto;
+  }
+  .intro-text{
+    flex:0 0 auto;
+    max-width:100%;
+    text-align:center;
+  }
+  .intro-title{margin-bottom:1rem;}
+  .intro-name{font-size:clamp(1.8rem, 7vw, 2.4rem);}
+  .intro-sub{font-size:.95rem; margin-bottom:1.5rem;}
+  .intro-hint{justify-content:center;}
+  .intro-stage{
+    flex:0 0 auto;
+    width:100%;
+    height:46vh;
+    margin-top:.5rem;
+  }
+  .id-card{
+    width:230px;
+    padding:28px 12px 12px;
+  }
+  .id-photo{aspect-ratio:1/1;}
+  .id-name{font-size:1.15rem;}
+}
+
+@media (max-width:420px){
+  .intro-stage{height:42vh;}
+  .id-card{width:210px;}
+}
+
+@media (prefers-reduced-motion: reduce){
+  .intro{transition:opacity .3s ease;}
+  .intro.leave{transform:none; opacity:0;}
+  .id-card{transition:none;}
+}
